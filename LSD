@@ -1,0 +1,144 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define K 5      // 자릿수 (최대 정렬할 수 있는 자릿수)
+#define N 10     // 기수의 범위 (0-9)
+#define MAX_ELEMENTS 10  // 최대 입력 요소 수
+
+struct node {
+    int key;
+    struct node *link;
+};
+
+// 노드 생성 함수
+struct node* createNode(int key) {
+    struct node* newNode = (struct node*)malloc(sizeof(struct node));
+    if (newNode == NULL) {
+        printf("Memory allocation failed\n");
+        exit(1);
+    }
+    newNode->key = key;
+    newNode->link = NULL;
+    return newNode;
+}
+
+// 연결 리스트 출력 함수
+void printList(struct node* head) {
+    struct node* temp = head;
+    while (temp != NULL) {
+        printf("%d -> ", temp->key);
+        temp = temp->link;
+    }
+    printf("NULL\n");
+}
+
+// LSD 기수 정렬 함수
+void radixSort(struct node **x) {
+    int i, j, digit;
+    struct node *list, *t;
+    struct node *d[N], *dRear[N];
+
+    // 각 자릿수에 대해 정렬 수행
+    for (i = 0; i < K; i++) {
+        // 각 버킷(digit) 초기화
+        for (j = 0; j < N; j++) {
+            d[j] = NULL;
+            dRear[j] = NULL;
+        }
+
+        // 리스트를 가져옴
+        list = *x;
+
+        // 각 노드에 대해 현재 자릿수의 값(digit)을 계산하고 해당 버킷에 넣음
+        while (list != NULL) {
+            // 현재 노드를 임시 변수에 저장하고 다음 노드로 이동
+            t = list;
+            list = list->link;
+            t->link = NULL;  // 현재 노드와 나머지 리스트 분리
+
+            // 현재 자릿수의 값 계산 (i 자릿수)
+            digit = t->key;
+            for (j = 0; j < i; j++) {
+                digit = digit / 10;
+            }
+            digit = digit % 10;
+
+            // 해당 버킷에 노드 연결
+            if (d[digit] == NULL) {
+                d[digit] = t;  // 버킷이 비어있으면 첫 노드로 설정
+            } else {
+                dRear[digit]->link = t;  // 버킷의 마지막 노드에 현재 노드 연결
+            }
+            dRear[digit] = t;  // 버킷의 마지막 노드 갱신
+        }
+
+        // 모든 버킷을 연결하여 새로운 리스트 생성
+        list = NULL;
+        for (j = 0; j < N; j++) {
+            if (d[j] != NULL) {
+                if (list == NULL) {
+                    list = d[j];  // 첫 번째 비어있지 않은 버킷을 리스트의 시작으로 설정
+                } else {
+                    // 현재 리스트의 마지막에 버킷 연결
+                    struct node* last = list;
+                    while (last->link != NULL) {
+                        last = last->link;
+                    }
+                    last->link = d[j];
+                }
+            }
+        }
+
+        // 정렬된 리스트로 갱신
+        *x = list;
+    }
+}
+
+// 테스트를 위한 메인 함수
+int main() {
+    struct node* head = NULL;
+    struct node* temp;
+    int value, count = 0;
+
+    printf("최대 %d개의 정수를 입력하세요 (종료하려면 음수를 입력하세요):\n", MAX_ELEMENTS);
+
+    // 사용자로부터 최대 10개의 값을 입력받음
+    while (count < MAX_ELEMENTS) {
+        printf("값 #%d: ", count + 1);
+        scanf("%d", &value);
+
+        // 음수 입력 시 입력 종료
+        if (value < 0) {
+            break;
+        }
+
+        // 새 노드 생성 및 리스트에 추가
+        temp = createNode(value);
+        temp->link = head;
+        head = temp;
+        count++;
+    }
+
+    if (count == 0) {
+        printf("입력된 값이 없습니다.\n");
+        return 0;
+    }
+
+    printf("\n정렬 전 연결 리스트:\n");
+    printList(head);
+
+    // 기수 정렬 수행
+    radixSort(&head);
+
+    printf("\n정렬 후 연결 리스트:\n");
+    printList(head);
+
+    // 메모리 해제
+    while (head != NULL) {
+        temp = head;
+        head = head->link;
+        free(temp);
+    }
+
+    return 0;
+}
