@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define N 10
+
+typedef struct linkedNode {
+    int data;
+    struct linkedNode *link;  // 'struct node'가 아닌 'struct linkedNode'로 수정
+} listNode;
+
+listNode *list=NULL;
+
+listNode *insertPosition(int key) {
+    listNode *p = list;
+    listNode *pre = NULL;
+
+    // 삽입 위치 찾기 (오름차순 정렬 기준)
+    while(p != NULL && p->data < key) {
+        pre = p;
+        p = p->link;
+    }
+
+    return pre;  // 삽입할 위치의 이전 노드 반환
+}
+
+void insertList(listNode *pre, int x) {
+    listNode *new_node = (listNode *)malloc(sizeof(listNode));
+    new_node->data = x;
+
+    if(pre == NULL) {  // 리스트의 맨 앞에 삽입
+        new_node->link = list;
+        list = new_node;
+    } else {  // 중간이나 끝에 삽입
+        new_node->link = pre->link;
+        pre->link = new_node;
+    }
+}
+
+void printList(void) {
+    listNode *p = list;
+
+    printf("연결 리스트: ");
+    while(p != NULL) {
+        printf("%d ", p->data);
+        p = p->link;
+    }
+    printf("\n");
+}
+
+void main(void)
+{
+    int num, i=0;
+    listNode *t, *pre;
+
+    scanf("%d",&num);
+    t = (listNode *)malloc(sizeof(listNode));
+    t->data = num; t->link = NULL;
+    list = t; i = 1;
+
+    while(i<N) {
+        i++;
+        scanf("%d",&num);
+        pre = insertPosition(num);
+        insertList(pre, num);
+    }
+
+    printList();  // 리스트 출력 추가
+}
