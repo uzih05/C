@@ -1,0 +1,132 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+#include <windows.h>
+
+// 각각 변수 - 모든 프로세스의 총 실행 시간을 저장
+int totalWorkingTime = 0;
+
+typedef struct Process {
+    int pid;            // PID
+    int dochackTime;    // 프로세스가 도착한 시간
+    int burstTime;      // 프로세스가 실행에 필요한 시간
+    bool wanRyo;        // 완료 여부 (T/F)
+} Process;
+
+Process processList[10];    // 프로세스 리스트 배열
+int processCount = 0;       // 생성된 프로세스의 수
+
+Process* createProcess() {
+    // 다음 위치에 새로운 프로세스 정보 저장
+    Process *p = &processList[processCount];
+
+    // 프로세스 ID 설정
+    p->pid = processCount;
+
+    // 도착 시간은 순차적으로 부여
+    p->dochackTime = processCount;
+
+    // 실행 시간은 2~4초 사이의 랜덤 값으로 설정.. 맨 앞 하는 것 처럼 보이기 위함!
+    // rand() % 3 + 1: 1~3 사이의 랜덤 값 생성, +1: 범위를 2~4로 조정
+    p->burstTime = (rand() % 3 + 1) + 1;
+
+    // 초기 상태는 F로 지정
+    p->wanRyo = false;
+
+    // 프로세스 카운트 증가
+    processCount++;
+
+    // 생성된 프로세스 포인터 반환
+    return p;
+}
+
+void executeProcess(int pid) {
+    // 프로세스 목록을 순회하며 지정된 ID의 프로세스 찾기
+    for (int i = 0; i < processCount; i++) {
+        // ID가 일치하고 아직 완료되지 않은 프로세스인 경우
+        if (processList[i].pid == pid && !processList[i].wanRyo) {
+            // 프로세스 실행 시작 메시지 출력
+            printf("프로세스 ID=%d 실행 중...\n", pid);
+
+            // 프로세스의 실행 시간만큼 대기
+            // 1초 = 1000밀리초
+            Sleep(processList[i].burstTime * 1000);
+
+            // 프로세스 완료 상태로 표시
+            processList[i].wanRyo = true;
+
+            // 프로세스 실행 완료 메시지 출력
+            printf("프로세스 ID=%d 완료!\n", pid);
+            return;
+        }
+    }
+}
+
+void fcfsScheduling() {
+    int hyeonJaeTime = 0;        // 현재 시간
+    int totalWaitingTime = 0;    // 모든 프로세스의 대기 시간 합계
+    int totalbanHwanTime = 0;    // 모든 프로세스의 반환 시간 합계
+
+    // 프로세스 목록을 순회하며 각 프로세스 실행
+    for (int i = 0; i < processCount; i++) {
+        Process *p = &processList[i];
+
+        // 프로세스가 아직 도착하지 않았다면 해당 시간까지 대기
+        if (hyeonJaeTime < p->dochackTime) {
+            hyeonJaeTime = p->dochackTime;
+        }
+
+        // 대기 시간: 현재 시간 - 도착 시간
+        int waitingTime = hyeonJaeTime - p->dochackTime;
+        totalWaitingTime += waitingTime;  // 전체 대기 시간에 추가
+
+        // 프로세스 실행
+        executeProcess(p->pid);
+
+        // 시간 업데이트 (프로세스 실행 후)
+        hyeonJaeTime += p->burstTime;
+
+        // 반환 시간 계산: 프로세스 완료 시간 - 도착 시간
+        int banHwanTime = hyeonJaeTime - p->dochackTime;
+        totalbanHwanTime += banHwanTime;  // 전체 반환 시간에 추가
+
+        // 총 작업 시간
+        totalWorkingTime += p->burstTime;
+
+        // 현재 프로세스의 실행 결과 출력
+        printf("실행 시간: %d초, 총 작업 시간: %d초\n",
+               p->burstTime, totalWorkingTime);
+    }
+
+    // 평균 대기 시간과 평균 반환 시간 계산
+    float avgWaitingTime = (float)totalWaitingTime / processCount;
+    float avgbanHwanTime = (float)totalbanHwanTime / processCount;
+
+    // 스케줄링 결과 요약 출력
+    printf("\n================= 스케줄링 결과 =================\n");
+    printf("평균 대기 시간: %.2f초\n", avgWaitingTime);
+    printf("평균 반환 시간: %.2f초\n", avgbanHwanTime);
+    printf("평균 실행 시간: %d초\n", totalWorkingTime/processCount);
+}
+
+int main() {
+    // 난수 생성을 위한 시드 초기화 (현재 시간 기반)
+    srand(time(NULL));
+
+    // 프로세스 생성 시작 메시지
+    printf("========== 프로세스 생성 ==========\n");
+
+    // 10개의 프로세스 생성
+    for (int i = 0; i < 10; i++) {
+        Process *p = createProcess();
+        // 생성된 프로세스 정보 출력
+        printf("프로세스[%d]: ID=%d, 도착=%d, 실행=%d초\n",
+               i, p->pid, p->dochackTime, p->burstTime);
+    }
+
+    printf("\n========== FCFS 스케줄링 시작 ==========\n");
+    fcfsScheduling();
+
+    return 0;
+}
