@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100
+
+typedef struct {
+  int data[MAX];
+  int length;
+} Sequential_List;
+
+void initList(Sequential_List *list) {
+  list->length = 0;
+}
+
+void addAscendingElement(Sequential_List *list, int value) {
+  int i, pos;
+
+  if (list->length >= MAX) {
+    printf("리스트가 가득 찼습니다.\n");
+    return;
+  }
+
+  for (pos = 0; pos < list->length && list->data[pos] < value; pos++);
+  // pos값이 0부터 length보다 작고 현재 위치의 값이 value보다 작으면 한 칸씩 앞으로 이동.
+
+  for (i = list->length; i > pos; i--) {
+    list->data[i] = list->data[i - 1];
+  }
+  // 삽입 위치부터 원소들은 한 칸씩 앞으로 이동
+
+  list->data[pos] = value;
+  list->length++;
+}
+
+void displayList(Sequential_List *list) {
+  int i;
+  for (i = 0; i < list->length; i++) {
+    printf("%d ", list->data[i]);
+  }
+  printf("\n");
+}
+
+int main() {
+  FILE *fp;
+  Sequential_List list;
+  int num;
+
+  initList(&list);
+
+  fp = fopen("cmake-build-debug/data.dat", "r");
+  if (fp == NULL) {
+    printf("파일을 열 수 없습니다.\n");
+    return 1;
+  }
+
+  while (fscanf(fp, "%d", &num) == 1) {
+    addAscendingElement(&list, num);
+  }
+  fclose(fp);
+
+  printf("2. 오름차순 순차리스트에 저장된 정수 (%d개):\n", list.length);
+  displayList(&list);
+
+  return 0;
+}
