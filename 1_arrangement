@@ -1,0 +1,31 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100
+
+int main()
+{
+    FILE *fp;
+    int arr_list[MAX];
+    int n = 0;
+    int num;
+    fp = fopen("data.dat", "r");
+    if (fp == NULL) {
+        printf("파일을 열 수 없습니다. 확인해주세요.\n");
+        return 1;
+    }
+
+    while (fscanf(fp, "%d", &num) == 1 && n < MAX) {
+        arr_list[n] = num;
+        n++;
+    }
+    fclose(fp);
+
+    printf("1. 배열에 저장된 정수 (%d개):\n", n);
+    for (int i= 0; i < n; i++) {
+        printf("%d ", arr_list[i]);
+    }
+    printf("\n");
+    return 0;
+}
+
