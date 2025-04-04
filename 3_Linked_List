@@ -1,0 +1,93 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+  int data;
+  struct Node *next;
+} Node;
+
+Node* createNode(int data) {
+  Node *newNode = (Node*)malloc(sizeof(Node));
+  if (newNode == NULL) {
+    printf("malloc 실패\n");
+    exit(1); // 심각한 오류 발생
+  }
+  newNode->data = data;
+  newNode->next = NULL;
+  return newNode;
+}
+
+void addDescendingElement(Node **head, int item) {
+  Node *newNode = createNode(item);
+  Node *current;
+
+  if (*head == NULL || item > (*head)->data) {  // 내림차순이기 때문에 헤드 노드가 커야함.
+    newNode->next = *head;
+    *head = newNode;
+    return;
+  }
+
+  current = *head;
+  while (current->next != NULL && current->next->data >= item) {  // 내림차순 위치 찾기
+    current = current->next;
+  }
+
+  // 찾은 위치 다음에 삽입
+  newNode->next = current->next;
+  current->next = newNode;
+}
+
+// 연결리스트 출력
+void displayList(Node *head) {
+  Node *current = head;
+  while (current != NULL) {
+    printf("%d ", current->data);
+    current = current->next;
+  }
+  printf("\n");
+}
+
+// 연결리스트 메모리 해제
+void freeList(Node *head) {
+  Node *temp;
+  while (head != NULL) {
+    temp = head;
+    head = head->next;
+    free(temp);
+  }
+}
+
+// 연결리스트 길이 계산
+int getLength(Node *head) {
+  int count = 0;
+  Node *current = head;
+  while (current != NULL) {
+    count++;
+    current = current->next;
+  }
+  return count;
+}
+
+int main() {
+  FILE *fp;
+  Node *head = NULL;
+  int num;
+
+  fp = fopen("cmake-build-debug/data.dat", "r");
+  if (fp == NULL) {
+    printf("파일을 열 수 없습니다.\n");
+    return 1;
+  }
+
+  while (fscanf(fp, "%d", &num) == 1) {
+    addDescendingElement(&head, num);
+  }
+  fclose(fp);
+
+  printf("3. 내림차순 연결리스트에 저장된 정수 (%d개):\n", getLength(head));
+  displayList(head);
+
+  freeList(head);
+
+  return 0;
+}
