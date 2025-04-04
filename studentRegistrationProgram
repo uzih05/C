@@ -1,0 +1,178 @@
+#include <stdio.h>
+
+#define FILENAME "enroll.txt"
+#define MAX_STUDENTS 20 // 20명 제한
+#define NAME_SIZE 10 // 이름은 10글자 까지
+
+typedef struct {
+    int id;
+    char name[NAME_SIZE];
+} Student;
+
+// 전역 변수 선언
+Student list[MAX_STUDENTS];  // 순차리스트
+int count = 0;               // 현재 학생 수
+
+// 함수 선언
+void display_menu();
+void enroll();
+void drop();
+void display();
+void save_file();
+void load_file();
+
+void display_menu() {
+    printf("\n===== 수강신청 관리 =====\n");
+    printf("1. 수강신청\n");
+    printf("2. 수강철회\n");
+    printf("3. 수강조회\n");
+    printf("4. 종료\n");
+    printf("=======================\n");
+    printf("메뉴 선택: ");
+}
+
+// 수강신청
+void enroll() {
+    Student s;
+
+    // 정원 초과 확인
+    if (count >= MAX_STUDENTS) {
+        printf("정원이 찼습니다.\n");
+        return;
+    }
+
+    printf("\n[수강신청]\n");
+    printf("학번: ");
+    scanf("%d", &s.id);
+    printf("이름: ");
+    scanf("%s", s.name);
+
+    // 중복 확인
+    for (int i = 0; i < count; i++) {
+        if (list[i].id == s.id) {
+            printf("이미 등록된 학번입니다.\n");
+            return;
+        }
+    }
+
+    // 순차리스트 끝에 추가
+    list[count] = s;
+    count++;
+
+    printf("수강신청 완료\n");
+    save_file();
+}
+
+// 수강철회
+void drop() {
+    int id, pos = -1;
+
+    printf("\n[수강철회]\n");
+    printf("학번: ");
+    scanf("%d", &id);
+
+    // 학번 찾기
+    for (int i = 0; i < count; i++) {
+        if (list[i].id == id) {
+            pos = i;
+            break;
+        }
+    }
+
+    if (pos == -1) {
+        printf("등록되지 않은 학번입니다.\n");
+        return;
+    }
+
+    // 삭제 (뒤에 있는 요소들을 앞으로 이동)
+    for (int i = pos; i < count - 1; i++) {
+        list[i] = list[i + 1];
+    }
+    count--;
+
+    printf("수강철회 완료\n");
+    save_file();
+}
+
+// 수강조회
+void display() {
+    printf("\n[수강조회]\n");
+    printf("학번\t이름\n");
+    printf("==============\n");
+
+    if (count == 0) {
+        printf("수강생 없음\n");
+    } else {
+        for (int i = 0; i < count; i++) {
+            printf("%d\t%s\n", list[i].id, list[i].name);
+        }
+    }
+
+    printf("==============\n");
+    printf("총 수강생: %d명\n", count);
+}
+
+// 파일 저장
+void save_file() {
+    FILE *fp = fopen(FILENAME, "w");
+
+    if (fp == NULL) {
+        printf("파일 저장 실패\n");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        fprintf(fp, "%d %s\n", list[i].id, list[i].name);
+    }
+
+    fclose(fp);
+}
+
+// 불러오기
+void load_file() {
+    FILE *fp = fopen(FILENAME, "r");
+
+    if (fp == NULL) {
+        printf("파일이 없습니다. 새로 시작합니다.\n");
+        return;
+    }
+
+    count = 0;
+    while (count < MAX_STUDENTS &&
+           fscanf(fp, "%d %s", &list[count].id, list[count].name) != EOF) {
+        count++;
+    }
+
+    fclose(fp);
+    printf("%d명의 수강생을 불러왔습니다.\n", count);
+}
+
+int main() {
+    int menu;
+
+    load_file();
+
+    while (1) {
+        display_menu();
+        scanf("%d", &menu);
+
+        switch (menu) {
+            case 1:
+                enroll();
+                break;
+            case 2:
+                drop();
+                break;
+            case 3:
+                display();
+                break;
+            case 4:
+                printf("프로그램을 종료합니다.\n");
+                return 0;
+            default:
+                printf("잘못된 메뉴 선택입니다.\n");
+        }
+    }
+
+    return 0;
+}
